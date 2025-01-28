@@ -32,34 +32,22 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      - name: ORT Analysis
+      # - name: ORT Analysis
+      #   id: ort_analysis
+      #   uses: oss-review-toolkit/ort-ci-github-action@v1
+      #   with:
+      #     args: analyze -i .. -f JSON --use-locks --allow-dynamic-versions
+
+      - name: Run ORT Analysis and Capture Output
         id: ort_analysis
-        uses: oss-review-toolkit/ort-ci-github-action@v1
-        with:
-          args: analyze -i .. -f JSON --use-locks --allow-dynamic-versions
-
-      - name: Process ORT Results
-        id: process_ort_results
         run: |
-          echo "===========output"
-          echo "::set-output name=ort_output::$(ort analyze -i .. -f JSON --use-locks)"
-          echo "===========packages"
-          echo "::set-output name=packages::$(ort analyze -i .. -f JSON --use-locks)"
-
-          echo "===========cli output"
-          ORT_OUTPUT=$(ort analyze -i . -f JSON --use-locks)
-          echo "$ORT_OUTPUT"
-          echo "$ORT_OUTPUT" | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | while IFS= read -r line; do
-            echo "::set-output name=packages_$line::$line"
-          done
-
-          # cat ort-output/analyzer-result.json | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
-          # echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
-
-          # cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
-          # echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
-          # cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
-          # echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
+          # We use docker to run ORT, capturing stdout
+          ORT_RESULT=$(docker run --rm -v $(pwd):/project ghcr.io/oss-review-toolkit/ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
+          echo "======= output"
+          echo "$ORT_RESULT"
+          # Save ORT result to an environment variable for use in subsequent steps
+          echo "ORT_RESULT=$ORT_RESULT" >> $GITHUB_ENV
+          echo "::set-output name=packages::$(echo "${{ env.ORT_RESULT }}" | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' | tr '\n' ' ')"
 
       - name: Check for New Dependencies
         id: check_new_deps
@@ -76,6 +64,7 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const ortResult = `${{ env.ORT_RESULT }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const packages = `${{ steps.ort_analysis.outputs.packages }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const newDeps = `${{ steps.check_new_deps.outputs.new_deps }}` === 'true';
             const rawPackages = `JSON.stringify(${{ steps.ort_analysis.outputs.packages }})`;
@@ -86,6 +75,7 @@ jobs:
             commentBody += `\n#### Dependencies:\n${packages.map(p => `- ${p}`).join('\n')}\n`;
             commentBody += `\n#### Raw packages:\n${rawPackages}\n`;
             commentBody += `\n#### Output packages:\n${outputPackages}\n`;
+            commentBody += `\n#### Ort result:\n${ortResult}\n`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
