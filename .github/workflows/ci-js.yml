@@ -35,8 +35,8 @@ jobs:
       - name: ORT Analysis
         id: ort_analysis
         run: |
-          # echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
-          echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks)"
+          echo "::set-output name=packages::$(ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
+          # echo "::set-output name=packages::$(ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Assuming ORT needs this for some operations
 
@@ -62,9 +62,9 @@ jobs:
 
             let commentBody = `### ORT Scan Results\n`;
             commentBody += `\n**New dependencies added:** ${newDeps ? 'Yes' : 'No'}`;
-            commentBody += `#### Dependencies:\n${packages.map(p => `- ${p}`).join('\n')}\n`;
-            commentBody += `#### Raw packages:\n${rawPackages}\n`;
-            commentBody += `#### Output packages:\n${outputPackages}\n`;
+            commentBody += `\n#### Dependencies:\n${packages.map(p => `- ${p}`).join('\n')}\n`;
+            commentBody += `\n#### Raw packages:\n${rawPackages}\n`;
+            commentBody += `\n#### Output packages:\n${outputPackages}\n`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
