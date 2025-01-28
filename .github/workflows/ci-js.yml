@@ -34,11 +34,23 @@ jobs:
 
       - name: ORT Analysis
         id: ort_analysis
+        uses: oss-review-toolkit/ort-ci-github-action@v1
+        with:
+          args: analyze -i . -f JSON --use-locks
+
+      - name: Process ORT Results
         run: |
-          echo "::set-output name=packages::$(ort analyze -i ../.. -f JSON --use-locks --allow-dynamic-versions | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
-          # echo "::set-output name=packages::$(ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Assuming ORT needs this for some operations
+          cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
+          echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
+        id: process_ort_results
+
+      # - name: ORT Analysis
+      #   id: ort_analysis
+      #   run: |
+      #     echo "::set-output name=packages::$(ort analyze -i ../.. -f JSON --use-locks --allow-dynamic-versions | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
+      #     # echo "::set-output name=packages::$(ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Assuming ORT needs this for some operations
 
       - name: Check for New Dependencies
         id: check_new_deps
