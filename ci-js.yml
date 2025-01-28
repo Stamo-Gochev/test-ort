@@ -1,0 +1,62 @@
+name: ORT Analysis for JavaScript Project
+
+on:
+  pull_request:
+    paths:
+      - 'package.json'  # Only trigger on changes to package.json
+
+jobs:
+  ort-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for diff check
+
+    - name: Run ORT Analysis with Docker
+      run: |
+        docker run --rm \
+          -v $(pwd):/project \
+          -v $(pwd)/ort-output:/project/ort-output \
+          ossreviewtoolkit/ort \
+          analyze -i /project -o /project/ort-output -f JSON,YAML,HTML --package-curation-providers=ClearlyDefined
+
+    - name: Check for New Dependencies
+      run: |
+        git fetch origin $GITHUB_BASE_REF
+        git diff --name-only origin/$GITHUB_BASE_REF..HEAD -- package.json | grep 'package.json' && echo "New dependencies added" || echo "No new dependencies"
+
+    - name: Process ORT Results
+      id: ort-results
+      run: |
+        echo "ORT Results:"
+        cat ort-output/analyzer-result.json | jq -r '.packages[] | "\(.id.name): \(.id.version)"'
+
+    - name: Comment PR
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const ortResult = JSON.parse(fs.readFileSync(path.join('ort-output', 'analyzer-result.json'), 'utf-8'));
+          const newDeps = await exec.exec('git diff --name-only origin/${{ github.base_ref }}..HEAD -- package.json | grep package.json', [], { ignoreReturnCode: true }) !== 1;
+
+          let commentBody = `### ORT Scan Results\n`;
+          commentBody += `#### Dependencies:\n${ortResult.packages.map(p => `- ${p.id.name}: ${p.id.version}`).join('\n')}\n`;
+          commentBody += `\n**New dependencies added:** ${newDeps ? 'Yes' : 'No'}`;
+
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: commentBody
+          });
+
+    - name: Upload ORT Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: ort-report
+        path: ort-output
