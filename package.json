@@ -1,0 +1,19 @@
+{
+    "name": "test-ort",
+    "description": "Test the ORT toolkit",
+    "author": "Stamo Gochev",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "engines": {
+        "npm": ">=10.0.0",
+        "node": ">=20.0.0"
+    },
+    "dependencies": {
+        "jest": "20.0.0"
+    },
+    "peerDependencies": {
+        "semantic-release": "6.0.0"
+    },
+    "devDependencies": {
+        "validate-commit-msg": "1.1.1"
+    }
+}
