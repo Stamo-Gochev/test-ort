@@ -42,7 +42,7 @@ jobs:
         id: ort_analysis
         run: |
           # We use docker to run ORT, capturing stdout
-          ORT_RESULT=$(docker run --rm -v $(pwd):/project ghcr.io/oss-review-toolkit/ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
+          ORT_RESULT=$(docker run --rm -v $(pwd) ghcr.io/oss-review-toolkit/ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
           echo "======= output"
           echo "$ORT_RESULT"
           # Save ORT result to an environment variable for use in subsequent steps
