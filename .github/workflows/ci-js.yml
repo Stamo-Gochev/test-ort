@@ -48,6 +48,7 @@ jobs:
 
           echo "===========cli output"
           ORT_OUTPUT=$(ort analyze -i . -f JSON --use-locks)
+          echo "$ORT_OUTPUT"
           echo "$ORT_OUTPUT" | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | while IFS= read -r line; do
             echo "::set-output name=packages_$line::$line"
           done
