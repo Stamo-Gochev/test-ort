@@ -24,10 +24,18 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for diff check
 
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install npm dependencies
+        run: npm install
+
       - name: ORT Analysis
         id: ort_analysis
         run: |
-          echo "::set-output name=packages::$(ort analyze -i . -f JSON | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
+          echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Assuming ORT needs this for some operations
 
