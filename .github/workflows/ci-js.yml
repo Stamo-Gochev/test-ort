@@ -34,7 +34,7 @@ jobs:
 
       - name: Run ORT analyze
         id: ort-analyze
-        uses: oss-review-toolkit/ort@v1
+        uses: oss-review-toolkit/ort-ci-github-action@v1
         with:
           ort-command: "analyze"
           input-path: ".."
