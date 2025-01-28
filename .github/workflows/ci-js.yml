@@ -48,10 +48,14 @@ jobs:
           script: |
             const packages = `${{ steps.ort_analysis.outputs.packages }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const newDeps = `${{ steps.check_new_deps.outputs.new_deps }}` === 'true';
+            const rawPackages = `JSON.stringify(${{ steps.ort_analysis.outputs.packages }})`;
+            const outputPackages = `${{ steps.ort_analysis.outputs.packages }}`;
 
             let commentBody = `### ORT Scan Results\n`;
-            commentBody += `#### Dependencies:\n${packages.map(p => `- ${p}`).join('\n')}\n`;
             commentBody += `\n**New dependencies added:** ${newDeps ? 'Yes' : 'No'}`;
+            commentBody += `#### Dependencies:\n${packages.map(p => `- ${p}`).join('\n')}\n`;
+            commentBody += `#### Raw packages:\n${rawPackages}\n`;
+            commentBody += `#### Output packages:\n${outputPackages}\n`;
 
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
