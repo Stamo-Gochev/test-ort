@@ -16,7 +16,7 @@ jobs:
         fetch-depth: 0  # Fetch all history for diff check
 
     - name: ORT Analysis
-      uses: oss-review-toolkit/ort-action@main  # Using the main branch, you might want to pin to a specific version like vX.X.X
+      uses: oss-review-toolkit/ort-ci-github-action@v1  # Use the latest stable version, here v1
       with:
         args: >
           analyze -i . -o ort-output -f JSON,YAML,HTML
