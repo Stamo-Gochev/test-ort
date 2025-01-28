@@ -39,10 +39,15 @@ jobs:
           args: analyze -i .. -f JSON --use-locks --allow-dynamic-versions
 
       - name: Process ORT Results
-        run: |
-          cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
-          echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
         id: process_ort_results
+        run: |
+          cat ort-output/analyzer-result.json | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
+          echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
+
+          # cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
+          # echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
+          # cat ${{ steps.ort_analysis.outputs.analyzer-result-json }} | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' > packages.txt
+          # echo "::set-output name=packages::$(cat packages.txt | tr '\n' ' ')"
 
       # - name: ORT Analysis
       #   id: ort_analysis
