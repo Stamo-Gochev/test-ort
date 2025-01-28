@@ -32,31 +32,21 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      # - name: ORT Analysis
-      #   id: ort_analysis
-      #   uses: oss-review-toolkit/ort-ci-github-action@v1
-      #   with:
-      #     args: analyze -i .. -f JSON --use-locks --allow-dynamic-versions
+      - name: Run ORT analyze
+        id: ort-analyze
+        uses: oss-review-toolkit/ort@v1
+        with:
+          ort-command: "analyze"
+          input-path: ".."
+          package-managers: "NPM"
+        env:
+          JAVA_OPTS: "-Xmx2g" # Adjust memory options if needed
 
-      - name: Run ORT Analysis and Capture Output
-        id: ort_analysis
+      - name: Extract and set dependencies
+        id: extract-dependencies
         run: |
-          # We use docker to run ORT, capturing stdout
-          # # ORT_RESULT=$(docker run --rm -v $(pwd) ghcr.io/oss-review-toolkit/ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
-          # ORT_RESULT=$(docker run --rm -v $(pwd) ghcr.io/oss-review-toolkit/ort analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
-
-
-          # docker pull ghcr.io/oss-review-toolkit/ort:latest  # Pull the latest image
-          # ORT_RESULT=$(docker run --rm -v $(pwd):$(pwd) ghcr.io/oss-review-toolkit/ort:latest analyze -i .. -f JSON --use-locks --allow-dynamic-versions)
-          ORT_RESULT=$(docker run --rm -v $(pwd):$(pwd) ghcr.io/oss-review-toolkit/ort:latest analyze -i .. -f JSON)
-          echo "Captured ORT output:"
-
-
-          echo "======= output"
-          echo "$ORT_RESULT"
-          # Save ORT result to an environment variable for use in subsequent steps
-          echo "ORT_RESULT=$ORT_RESULT" >> $GITHUB_ENV
-          echo "::set-output name=packages::$(echo "${{ env.ORT_RESULT }}" | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g' | tr '\n' ' ')"
+          dependencies=$(cat /dev/stdin <<< "${{ steps.ort-analyze.outputs.stdout }}" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].name' | tr '\n' ',')
+          echo "packages=${dependencies}" >> $GITHUB_ENV
 
       - name: Check for New Dependencies
         id: check_new_deps
