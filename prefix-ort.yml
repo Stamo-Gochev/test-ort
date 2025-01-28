@@ -1,0 +1,59 @@
+# General configuration
+analyzer:
+  # Configuration for the analyzer component
+  package-managers:
+    - "npm"
+  # Paths or scopes to exclude from analysis
+  # excludes:
+  #   paths:
+  #     - path: "test/**"
+  #       reason: "TEST_DEPENDENCY_OF"
+  #       comment: "Test dependencies are not included in the release"
+  #   scopes:
+  #     - pattern: "test"
+  #       reason: "TEST_DEPENDENCY_OF"
+  #       comment: "Test scope dependencies are excluded"
+
+# scanner:
+#   # Configuration for the scanner component
+#   scan-vcs:
+#     - enabled: true
+#       min-depth: 1
+#       max-depth: 10
+#   scan-nested: true
+#   # Specify scanners to use
+#   scanners:
+#     - name: "ScanCode"
+#       config:
+#         commandLine: ["--license", "--copyright"]
+
+# advisor:
+#   # Configuration for the advisor component
+#   advisors:
+#     - name: "VulnerableCode"
+#       config:
+#         api-url: "https://api.vulnerablecode.io/v1"
+
+# evaluator:
+#   # Configuration for the evaluator; rules can be defined here or in a separate file
+#   rules:
+#     - name: "License Rule"
+#       message: "License not allowed"
+#       severity: "ERROR"
+#       license:
+#         id: "GPL-2.0-only"
+#         scope: "EXCLUDED"
+
+# # Curations for packages (optional)
+# curations:
+#   - id: "NPM::some-package:1.0.0"
+#     reason: "WRONG_LICENSE"
+#     comment: "License was incorrectly detected"
+#     concluded_license: "MIT"
+
+# # Resolutions for issues or violations (optional)
+# resolutions:
+#   issues:
+#     - message: "Could not resolve.*"
+#       reason: "CANT_FIX_ISSUE"
+#       comment: "Issue due to external service downtime"

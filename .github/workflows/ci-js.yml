@@ -36,7 +36,7 @@ jobs:
         id: ort_analysis
         uses: oss-review-toolkit/ort-ci-github-action@v1
         with:
-          args: analyze -i . -f JSON --use-locks
+          args: analyze -i .. -f JSON --use-locks --allow-dynamic-versions
 
       - name: Process ORT Results
         run: |
