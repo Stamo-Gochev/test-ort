@@ -35,7 +35,8 @@ jobs:
       - name: ORT Analysis
         id: ort_analysis
         run: |
-          echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
+          # echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks | jq -r '.packages[] | "\(.id.name):\(.id.version)"' | sed 's/ /_/g')"
+          echo "::set-output name=packages::$(ort analyze -i . -f JSON --use-locks"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Assuming ORT needs this for some operations
 
