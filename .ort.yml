@@ -1,0 +1,3 @@
+analyzer:
+  package-managers:
+    - "NPM"
