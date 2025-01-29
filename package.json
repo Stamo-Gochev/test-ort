@@ -8,7 +8,7 @@
         "node": ">=20.0.0"
     },
     "dependencies": {
-        "jest": "20.0.0"
+        "jest": "29.7.0"
     },
     "peerDependencies": {
         "semantic-release": "6.0.0"
