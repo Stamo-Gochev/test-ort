@@ -37,12 +37,7 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
-          json_output=$(docker run --rm \
-              -v "$PWD:/ort" \
-              ghcr.io/oss-review-toolkit/ort:latest analyze \
-              -i /ort \
-              --package-managers NPM \
-              --output-formats JSON)
+          json_output=$(docker run ghcr.io/oss-review-toolkit/ort analyze -i .. --output-formats JSON)
 
           # Output the JSON result to the console
           echo "$json_output"
@@ -62,12 +57,12 @@ jobs:
       #     args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
       #     input-path: ".."
 
-      # - name: Debug ORT Output
-      #   run: |
-      #     echo "Listing ORT output directory..."
-      #     ls -R ort-results || echo "ORT results directory not found!"
-      #     echo "Checking default ORT directories..."
-      #     ls -R ort || echo "Default ORT directory not found!"
+      - name: Debug ORT Output
+        run: |
+          echo "Listing ORT output directory..."
+          ls -R ort-results || echo "ORT results directory not found!"
+          echo "Checking default ORT directories..."
+          ls -l .
 
       # - name: Extract and set dependencies
       #   id: extract-dependencies
