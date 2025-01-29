@@ -30,8 +30,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install npm dependencies
-        run: npm install
+      # - name: Install npm dependencies
+      #   run: npm install
 
       - name: Create Output Directory
         run: mkdir -p ort-output
@@ -68,10 +68,15 @@ jobs:
           json_output=$(cat ./ort-output/analyzer-result.json)
 
           echo "======== json output"
-          echo "$json_output"
+          # echo "$json_output"
 
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
-          dependencies=$(echo "$json_output")
+          # dependencies=$(cat ort-output/analyzer/result.json | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null) | .id')
+          # dependencies=$(echo "$json_output")
+
+          # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
+          dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null) | .id')
+          echo "$dependencies"
 
           echo "$dependencies"
           echo "packages=${dependencies}" >> $GITHUB_ENV
@@ -84,13 +89,6 @@ jobs:
       #     command: "analyze"
       #     args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
       #     input-path: ".."
-
-      - name: Debug ORT Output
-        run: |
-          echo "Listing ORT output directory..."
-          ls -R ort-results || echo "ORT results directory not found!"
-          echo "Checking default ORT directories..."
-          ls -l .
 
       # - name: Extract and set dependencies
       #   id: extract-dependencies
