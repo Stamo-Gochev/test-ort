@@ -43,7 +43,8 @@ jobs:
           echo "$json_output"
 
           # Now process the output with jq and store the dependencies
-          dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
+          # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
+          dependencies=$(echo "$json_output")
 
           echo "$dependencies"
           echo "packages=${dependencies}" >> $GITHUB_ENV
