@@ -37,9 +37,23 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
+<<<<<<< Updated upstream
           dependencies=$(docker run --rm -v $PWD:/ort ghcr.io/oss-review-toolkit/ort:latest analyze \
             -i /ort --package-managers NPM --output-formats JSON 2>/dev/null \
             | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
+=======
+
+          json_output=$(docker run --rm -v "$PWD:/ort" ghcr.io/oss-review-toolkit/ort:latest analyze -i /ort -o /ort-output --package-manager NPM --output-formats JSON)
+
+          # Output the JSON result to the console
+          echo "$json_output"
+
+          # Now process the output with jq and store the dependencies
+          dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
+
+          # You can then output the dependencies if needed
+          echo "$dependencies"
+>>>>>>> Stashed changes
 
           echo "packages=${dependencies}" >> $GITHUB_ENV
           echo "Detected packages: $dependencies"
