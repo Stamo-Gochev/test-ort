@@ -37,7 +37,7 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
-          json_output=$(docker run ghcr.io/oss-review-toolkit/ort -v $PWD/:/project analyze -i /project -o /project --output-formats JSON)
+          json_output=$(docker run ghcr.io/oss-review-toolkit/ort -v $PWD/:/$PWD analyze -i . -o ./ort-results --output-formats JSON)
 
           # Output the JSON result to the console
           echo "$json_output"
