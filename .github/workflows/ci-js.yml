@@ -58,11 +58,11 @@ jobs:
 
           ls -l
 
-          ls -l ./workspace
+          # ls -l ./workspace
           ls -l ort-output
           ls -l ./ort-output
 
-          json_output=$(cat ./workspace/ort-analysis.json)
+          json_output=$(cat ./ort-output/ort-analysis.json)
 
           echo "======== output"
           echo "$json_output"
