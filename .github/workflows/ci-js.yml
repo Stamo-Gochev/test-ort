@@ -36,6 +36,15 @@ jobs:
       - name: Create Output Directory
         run: mkdir -p ort-output
 
+      - name: Set Permissions for $PWD and ort-output
+        run: |
+          sudo chown -R $(whoami) "$PWD"  # Ensure $PWD has read/write permissions
+          sudo chmod -R 777 "$PWD"        # Make $PWD writable
+
+          mkdir -p ort-output              # Ensure ort-output directory exists
+          sudo chown -R $(whoami) "$PWD/ort-output"  # Set permissions for ort-output
+          sudo chmod -R 777 "$PWD/ort-output"        # Make ort-output writable
+
       - name: Run ORT analyze and extract dependencies
         id: ort-analyze
         run: |
@@ -43,7 +52,9 @@ jobs:
           # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
           # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
           # json_output=$(docker run --rm -v "$PWD:/workspace" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /workspace --output-formats JSON)
-          json_output=$(docker run --rm -v "$PWD:/workspace" -v "$PWD/ort-output:/ort-output" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /ort-output --output-formats JSON)
+          # json_output=$(docker run --rm -v "$PWD:/workspace" -v "$PWD/ort-output:/ort-output" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /ort-output --output-formats JSON)
+
+          json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-output --output-formats JSON)
 
           ls -l
 
