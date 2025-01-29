@@ -42,6 +42,8 @@ jobs:
 
           ls -l
 
+          json_output=$(cat ort-analysis.json)
+
           echo "======== output"
           echo "$json_output"
 
