@@ -37,12 +37,14 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
-          json_output=$(docker run ghcr.io/oss-review-toolkit/ort -v $PWD/:/$PWD analyze -i . -o ./ort-results --output-formats JSON)
+          # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
+          json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON | tee ort-analysis.json)
 
-          # Output the JSON result to the console
+          ls -l
+
+          echo "======== output"
           echo "$json_output"
 
-          # Now process the output with jq and store the dependencies
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
           dependencies=$(echo "$json_output")
 
