@@ -33,33 +33,43 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      - name: Run ORT analyze
+      - name: Run ORT analyze and extract dependencies
         id: ort-analyze
-        uses: oss-review-toolkit/ort-ci-github-action@v1
-        with:
-          command: "analyze"
-          args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
-          input-path: ".."
-
-      - name: Debug ORT Output
         run: |
-          echo "Listing ORT output directory..."
-          ls -R ort-results || echo "ORT results directory not found!"
-          echo "Checking default ORT directories..."
-          ls -R ort || echo "Default ORT directory not found!"
+          echo "Running ORT analyze..."
+          dependencies=$(docker run --rm -v $PWD:/ort ghcr.io/oss-review-toolkit/ort:latest analyze \
+            -i /ort --package-managers NPM --output-formats JSON 2>/dev/null \
+            | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
 
-
-      - name: Extract and set dependencies
-        id: extract-dependencies
-        run: |
-          ORT_JSON_PATH=$(find ort-results ort -name "analyzer-result.json" 2>/dev/null | head -n 1)
-          if [[ -z "$ORT_JSON_PATH" ]]; then
-            echo "Error: analyzer-result.json not found!"
-            exit 1
-          fi
-          echo "Found ORT JSON file at $ORT_JSON_PATH"
-          dependencies=$(jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' "$ORT_JSON_PATH" | tr '\n' ',')
           echo "packages=${dependencies}" >> $GITHUB_ENV
+          echo "Detected packages: $dependencies"
+
+      # - name: Run ORT analyze
+      #   id: ort-analyze
+      #   uses: oss-review-toolkit/ort-ci-github-action@v1
+      #   with:
+      #     command: "analyze"
+      #     args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
+      #     input-path: ".."
+
+      # - name: Debug ORT Output
+      #   run: |
+      #     echo "Listing ORT output directory..."
+      #     ls -R ort-results || echo "ORT results directory not found!"
+      #     echo "Checking default ORT directories..."
+      #     ls -R ort || echo "Default ORT directory not found!"
+
+      # - name: Extract and set dependencies
+      #   id: extract-dependencies
+      #   run: |
+      #     ORT_JSON_PATH=$(find ort-results ort -name "analyzer-result.json" 2>/dev/null | head -n 1)
+      #     if [[ -z "$ORT_JSON_PATH" ]]; then
+      #       echo "Error: analyzer-result.json not found!"
+      #       exit 1
+      #     fi
+      #     echo "Found ORT JSON file at $ORT_JSON_PATH"
+      #     dependencies=$(jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' "$ORT_JSON_PATH" | tr '\n' ',')
+      #     echo "packages=${dependencies}" >> $GITHUB_ENV
 
       - name: Check for New Dependencies
         id: check_new_deps
