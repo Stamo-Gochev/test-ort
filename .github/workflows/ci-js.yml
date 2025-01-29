@@ -3,7 +3,8 @@ name: ORT Analysis for JavaScript Project
 on:
   pull_request:
     paths:
-      - 'package.json'  # Only trigger on changes to package.json
+      # todo: skip node_modules
+      - '**/**/package.json' # Trigger when package.json changes
 
 jobs:
   ort-analysis:
@@ -36,16 +37,16 @@ jobs:
         id: ort-analyze
         uses: oss-review-toolkit/ort-ci-github-action@v1
         with:
-          ort-command: "analyze"
+          command: "analyze"
+          args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
           input-path: ".."
-          package-managers: "NPM"
-        env:
-          JAVA_OPTS: "-Xmx2g" # Adjust memory options if needed
 
       - name: Extract and set dependencies
         id: extract-dependencies
         run: |
-          dependencies=$(cat /dev/stdin <<< "${{ steps.ort-analyze.outputs.stdout }}" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].name' | tr '\n' ',')
+          echo "====== results"
+          cat ort-results/analyzer-result.json
+          dependencies=$(jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' ort-results/analyzer-result.json | tr '\n' ',')
           echo "packages=${dependencies}" >> $GITHUB_ENV
 
       - name: Check for New Dependencies
