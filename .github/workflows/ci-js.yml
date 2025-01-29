@@ -38,11 +38,14 @@ jobs:
         run: |
           echo "Running ORT analyze..."
           # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
-          json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
+          # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
+          json_output=$(docker run --rm -v "$PWD:/workspace" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /workspace --output-formats JSON)
 
           ls -l
 
-          json_output=$(cat ort-analysis.json)
+          ls -l ./workspace
+
+          json_output=$(cat ./workspace/ort-analysis.json)
 
           echo "======== output"
           echo "$json_output"
