@@ -75,7 +75,7 @@ jobs:
           # dependencies=$(echo "$json_output")
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
 
-          dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null and .vulnerabilities | length > 0) | .id')
+          dependencies=$(echo "$json_output" | jq -r '.analyzer.result.packages[] | select(.vulnerabilities != null and (.vulnerabilities | length > 0)) | .id'
           echo "$dependencies"
 
           echo "$dependencies"
