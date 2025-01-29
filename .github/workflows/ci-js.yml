@@ -56,15 +56,18 @@ jobs:
 
           json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-output --output-formats JSON)
 
+          echo "==== pwd:"
           ls -l
 
           # ls -l ./workspace
+          echo "==== ort output:"
           ls -l ort-output
           ls -l ./ort-output
 
-          json_output=$(cat ./ort-output/ort-analysis.json)
+          echo "==== ort output:"
+          json_output=$(cat ./ort-output/analyzer-result.json)
 
-          echo "======== output"
+          echo "======== json output"
           echo "$json_output"
 
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
