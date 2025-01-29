@@ -37,7 +37,14 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
-          json_output=$(docker run --rm -v "$PWD:/ort" ghcr.io/oss-review-toolkit/ort:latest analyze -i /ort -o /ort-output --output-formats JSON)
+          json_output=$(docker run --rm \
+            -v "$PWD:/ort" \
+            -v "$PWD/.ort:/root/.ort" \  # Prevents permission issues
+            ghcr.io/oss-review-toolkit/ort:latest \
+            analyze \
+            -i /ort \
+            --package-managers NPM \
+            --output-formats JSON)
 
           # Output the JSON result to the console
           echo "$json_output"
