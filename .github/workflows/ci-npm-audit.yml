@@ -34,9 +34,9 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
-      - name: Run npm audit
+      - name: Get npm audit results
         run: |
-          npm audit --dry-run --json > npm-audit-results.json
+          npm audit --dry-run --json > npm-audit-results.json 2>/dev/null
 
       - name: Process audit results
         id: audit
@@ -84,3 +84,8 @@ jobs:
               repo: context.repo.repo,
               body: commentBody
             });
+
+      - name: Run npm audit
+        run: |
+          # make the build fail if npm audit returns vulnerabilities
+          npm audit --dry-run
