@@ -58,7 +58,7 @@ jobs:
 
             try {
               vulnerabilities = fs.readFileSync("npm-audit-results.json", 'utf8');
-              console.log('File content:', data);
+              console.log('File content:', vulnerabilities);
             } catch (err) {
               console.error('Error reading file:', err);
             }
