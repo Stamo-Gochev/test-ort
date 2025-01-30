@@ -38,13 +38,6 @@ jobs:
         run: |
           npm audit --dry-run --json > npm-audit-results.json || true
 
-      - name: Process audit results
-        id: audit
-        run: |
-          vulnerabilities=$(cat npm-audit-results.json)
-          echo "$vulnerabilities"
-          echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_ENV"
-
       - name: Check for New Dependencies
         id: check_new_deps
         run: |
@@ -55,12 +48,20 @@ jobs:
             echo "::set-output name=new_deps::false"
           fi
 
-      - name: Comment PR
+      - name: Process npm audit results
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const vulnerabilities = `${{ env.vulnerabilities }}`;
+            const fs = require('fs');
+            let vulnerabilities = [];
+
+            try {
+              vulnerabilities = fs.readFileSync("npm-audit-results.json", 'utf8');
+              console.log('File content:', data);
+            } catch (err) {
+              console.error('Error reading file:', err);
+            }
 
             if (vulnerabilities && vulnerabilities.length) {
               let commentBody = `## Results for scanned packages: \n`;
@@ -83,8 +84,6 @@ jobs:
                 body: commentBody
               });            }
             }
-
-
 
       - name: Run npm audit
         run: |
