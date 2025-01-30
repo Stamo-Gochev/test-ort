@@ -1,4 +1,4 @@
-name: ORT Analysis for JavaScript Project
+name: npm audit analysis
 
 on:
   pull_request:
@@ -36,15 +36,13 @@ jobs:
 
       - name: Get npm audit results
         run: |
-          npm audit --dry-run --json > npm-audit-results.json 2>/dev/null
+          npm audit --dry-run --json > npm-audit-results.json || true
 
       - name: Process audit results
         id: audit
         run: |
           vulnerabilities=$(cat npm-audit-results.json)
-          if [ -z "$vulnerabilities" ]; then
-            vulnerabilities="No vulnerabilities found."
-          fi
+          echo "$vulnerabilities"
           echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_ENV"
 
       - name: Check for New Dependencies
@@ -64,26 +62,29 @@ jobs:
           script: |
             const vulnerabilities = `${{ env.vulnerabilities }}`;
 
-            let commentBody = `## Results for scanned packages: \n`;
-            commentBody += `\n**Changes in dependencies:** ${newDeps ? 'Yes' : 'No'}`;
-            commentBody += `\n### Dependencies:\n
-              <details><summary>npm audit results</summary>
-              <p>
+            if (vulnerabilities && vulnerabilities.length) {
+              let commentBody = `## Results for scanned packages: \n`;
+              commentBody += `\n**Changes in dependencies:** ${newDeps ? 'Yes' : 'No'}`;
+                <details><summary>npm audit results</summary>
+                <p>
 
-              ```json
-                ${vulnerabilities}
-              ```
+                ```json
+                  ${vulnerabilities}
+                ```
 
-              </p>
-              </details>
-            `;
+                </p>
+                </details>
+              `;
 
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody
-            });
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });            }
+            }
+
+
 
       - name: Run npm audit
         run: |

@@ -1,4 +1,4 @@
-name: ORT Analysis for JavaScript Project
+name: ORT analysis
 
 on:
   pull_request:
