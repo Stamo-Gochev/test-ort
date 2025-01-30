@@ -75,7 +75,7 @@ jobs:
           echo "======== dependencies"
           echo "$dependencies"
           packages=$(echo "$dependencies")
-          echo "$packages" >> $GITHUB_ENV
+          # echo "$packages" >> $GITHUB_ENV
 
       - name: Run ORT advisor for vulnerability check
         id: ort-advisor
@@ -88,27 +88,8 @@ jobs:
           echo "========= vulnerabilities"
           echo "$vulnerabilities"
 
-          echo "$vulnerabilities" >> $GITHUB_ENV
-
-      # - name: Run ORT analyze
-      #   id: ort-analyze
-      #   uses: oss-review-toolkit/ort-ci-github-action@v1
-      #   with:
-      #     command: "analyze"
-      #     args: "--package-managers NPM --output-formats JSON --output-dir ort-results"
-      #     input-path: ".."
-
-      # - name: Extract and set dependencies
-      #   id: extract-dependencies
-      #   run: |
-      #     ORT_JSON_PATH=$(find ort-results ort -name "analyzer-result.json" 2>/dev/null | head -n 1)
-      #     if [[ -z "$ORT_JSON_PATH" ]]; then
-      #       echo "Error: analyzer-result.json not found!"
-      #       exit 1
-      #     fi
-      #     echo "Found ORT JSON file at $ORT_JSON_PATH"
-      #     dependencies=$(jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' "$ORT_JSON_PATH" | tr '\n' ',')
-      #     echo "packages=${dependencies}" >> $GITHUB_ENV
+          # echo "$vulnerabilities" >> $GITHUB_ENV
+          echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_OUTPUT"
 
       - name: Check for New Dependencies
         id: check_new_deps
@@ -125,8 +106,11 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const vulnerabilities = `${{ env.vulnerabilities }}`;
+            const vulnerabilities2 = `${{ env.vulnerabilities }}`;
+            console.log(vulnerabilities2);
+            const vulnerabilities = `${{ steps.ort-advisor.outputs.vulnerabilities }}`;
             console.log(vulnerabilities);
+
             const ortResult = `${{ env.ORT_RESULT }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const packages = `${{ steps.ort_analysis.outputs.packages }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const newDeps = `${{ steps.check_new_deps.outputs.new_deps }}` === 'true';
