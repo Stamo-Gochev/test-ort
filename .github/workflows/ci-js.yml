@@ -96,13 +96,24 @@ jobs:
           echo "==== ort results:"
           ls -l ort-results
           ls -l ./ort-results
-|
+
           vulnerabilities=$(jq -c '[.scanner.results.scanResults[].summary.vulnerabilities[]? | {id, severity, title}]' < ort-results/scanner-result.json)
 
           vulnerabilities="${vulnerabilities:-[]}"  # Ensure valid JSON string
           echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_ENV"
           echo "Detected vulnerable packages:"
           echo "$vulnerabilities"
+
+          echo "Running ORT advisor for security vulnerabilities..."
+          docker run --rm -v "$PWD:$PWD" \
+            -e ORT_ADVISOR_OSV_ENABLED=true \
+            -e ORT_ADVISOR_GITHUB_ENABLED=true \
+            ghcr.io/oss-review-toolkit/ort:latest advisor \
+            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+
+          echo "==== ort results:"
+          ls -l ort-results
+          ls -l ./ort-results
 
       - name: Check for New Dependencies
         id: check_new_deps
