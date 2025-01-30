@@ -34,39 +34,39 @@ jobs:
       #   run: npm install
 
       - name: Create Output Directory
-        run: mkdir -p ort-output
+        run: mkdir -p ort-results
 
-      - name: Set Permissions for $PWD and ort-output
+      - name: Set Permissions for $PWD and ort-results
         run: |
           sudo chown -R $(whoami) "$PWD"  # Ensure $PWD has read/write permissions
           sudo chmod -R 777 "$PWD"        # Make $PWD writable
 
-          mkdir -p ort-output              # Ensure ort-output directory exists
-          sudo chown -R $(whoami) "$PWD/ort-output"  # Set permissions for ort-output
-          sudo chmod -R 777 "$PWD/ort-output"        # Make ort-output writable
+          mkdir -p ort-results              # Ensure ort-results directory exists
+          sudo chown -R $(whoami) "$PWD/ort-results"  # Set permissions for ort-results
+          sudo chmod -R 777 "$PWD/ort-results"        # Make ort-results writable
 
       - name: Run ORT analyze and extract dependencies
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
 
-          json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-output --output-formats JSON)
+          json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-results --output-formats JSON)
 
           echo "==== pwd:"
           ls -l
 
           # ls -l ./workspace
           echo "==== ort output:"
-          ls -l ort-output
-          ls -l ./ort-output
+          ls -l ort-results
+          ls -l ./ort-results
 
           echo "==== ort output:"
-          json_output=$(cat ./ort-output/analyzer-result.json)
+          json_output=$(cat ./ort-results/analyzer-result.json)
 
           echo "======== json output"
 
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
-          # dependencies=$(cat ort-output/analyzer/result.json | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null) | .id')
+          # dependencies=$(cat ort-results/analyzer/result.json | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null) | .id')
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
 
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.packages[] | select(.vulnerabilities != null and (.vulnerabilities | length > 0)) | .id'
@@ -77,19 +77,45 @@ jobs:
           packages=$(echo "$dependencies")
           # echo "$packages" >> $GITHUB_ENV
 
-      - name: Run ORT advisor for vulnerability check
-        id: ort-advisor
+      # - name: Run ORT advisor for vulnerability check
+      #   id: ort-advisor
+      #   run: |
+      #     echo "Running ORT advisor for security vulnerabilities..."
+      #     vulnerabilities=$(docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest scan \
+      #       -i ort-results/analyzer-result.json --output-formats JSON 2>/dev/null \
+      #       | jq -r '.advisor.results.projects[].vulnerabilities[]?.id' | tr '\n' ',')
+
+      #     echo "========= vulnerabilities"
+      #     echo "$vulnerabilities"
+
+      #     # echo "$vulnerabilities" >> $GITHUB_ENV
+      #     echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_OUTPUT"
+
+
+      - name: Run ORT scanner for vulnerabilities
+        id: ort-scan
         run: |
-          echo "Running ORT advisor for security vulnerabilities..."
-          vulnerabilities=$(docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest advisor \
-            -i ort-output/analyzer-result.json --output-formats JSON 2>/dev/null \
-            | jq -r '.advisor.results.projects[].vulnerabilities[]?.id' | tr '\n' ',')
+          echo "Running ORT scanner for security vulnerabilities..."
+          docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest scan \
+            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results 2>&1
 
-          echo "========= vulnerabilities"
+          echo "==== ort scan:"
+          echo "==== pwd:"
+          ls -l
+
+          echo "==== ort results:"
+          ls -l ort-results
+          ls -l ./ort-results
+
+      - name: Extract Vulnerabilities from ORT Scanner
+        id: extract-vulnerabilities
+        run: |
+          vulnerabilities=$(jq -c '[.scanner.results.scanResults[].summary.vulnerabilities[]? | {id, severity, title}]' < ort-results/scanner-result.json)
+
+          vulnerabilities="${vulnerabilities:-[]}"  # Ensure valid JSON string
+          echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_ENV"
+          echo "Detected vulnerable packages:"
           echo "$vulnerabilities"
-
-          # echo "$vulnerabilities" >> $GITHUB_ENV
-          echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_OUTPUT"
 
       - name: Check for New Dependencies
         id: check_new_deps
@@ -108,7 +134,7 @@ jobs:
           script: |
             const vulnerabilities2 = `${{ env.vulnerabilities }}`;
             console.log(vulnerabilities2);
-            const vulnerabilities = `${{ steps.ort-advisor.outputs.vulnerabilities }}`;
+            const vulnerabilities = `${{ steps.extract-vulnerabilities.outputs.vulnerabilities }}`;
             console.log(vulnerabilities);
 
             const ortResult = `${{ env.ORT_RESULT }}`.split('\n').map(p => p.replace(/_/g, ' '));
