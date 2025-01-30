@@ -77,27 +77,21 @@ jobs:
           packages=$(echo "$dependencies")
           # echo "$packages" >> $GITHUB_ENV
 
-      # - name: Run ORT advisor for vulnerability check
-      #   id: ort-advisor
-      #   run: |
-      #     echo "Running ORT advisor for security vulnerabilities..."
-      #     vulnerabilities=$(docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest scan \
-      #       -i ort-results/analyzer-result.json --output-formats JSON 2>/dev/null \
-      #       | jq -r '.advisor.results.projects[].vulnerabilities[]?.id' | tr '\n' ',')
-
-      #     echo "========= vulnerabilities"
-      #     echo "$vulnerabilities"
-
-      #     # echo "$vulnerabilities" >> $GITHUB_ENV
-      #     echo "vulnerabilities=$vulnerabilities" >> "$GITHUB_OUTPUT"
-
 
       - name: Run ORT scanner for vulnerabilities
         id: ort-scan
         run: |
           echo "Running ORT scanner for security vulnerabilities..."
-          docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest scan \
-            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results 2>&1
+          docker run --rm -v "$PWD:$PWD" \
+           -e ORT_CONFIG='{
+              "ort": {
+                "config": {
+                  "withExplicitSealedTypes": true
+                }
+              }
+            }' \
+            ghcr.io/oss-review-toolkit/ort:latest scan \
+            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
 
           echo "==== ort scan:"
           echo "==== pwd:"
