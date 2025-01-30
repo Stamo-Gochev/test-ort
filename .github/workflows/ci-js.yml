@@ -125,7 +125,7 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            const vulnerabilities = `${{ $env.vulnerabilities }}`;
+            const vulnerabilities = `${{ env.vulnerabilities }}`;
             console.log(vulnerabilities);
             const ortResult = `${{ env.ORT_RESULT }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const packages = `${{ steps.ort_analysis.outputs.packages }}`.split('\n').map(p => p.replace(/_/g, ' '));
