@@ -45,12 +45,19 @@ jobs:
           sudo chown -R $(whoami) "$PWD/ort-results"  # Set permissions for ort-results
           sudo chmod -R 777 "$PWD/ort-results"        # Make ort-results writable
 
+      - name: Start Persistent ORT Container
+        run: |
+          echo "Starting ORT container..."
+          docker run -dit --name ort-container -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest
+
+
       - name: Run ORT analyze and extract dependencies
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
 
-          json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-results --output-formats JSON)
+          # json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-results --output-formats JSON)
+          json_output=$(docker exec ort-container ort analyze -i $PWD -o $PWD/ort-results --output-formats JSON)
 
           echo "==== pwd:"
           ls -l
@@ -82,22 +89,24 @@ jobs:
           cat ort-results/analyzer-result.json
 
           echo "Running ORT scanner for security vulnerabilities..."
-          docker run --rm -v "$PWD:$PWD" \
-           -e ORT_CONFIG='{
-              "ort": {
-                "config": {
-                  "withExplicitSealedTypes": true
-                }
-              }
-            }' \
-            ghcr.io/oss-review-toolkit/ort:latest scan \
-            -i ./ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+          # docker run --rm -v "$PWD:$PWD" \
+          #  -e ORT_CONFIG='{
+          #     "ort": {
+          #       "config": {
+          #         "withExplicitSealedTypes": true
+          #       }
+          #     }
+          #   }' \
+          #   ghcr.io/oss-review-toolkit/ort:latest scan \
+          #   -i ./ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+
+          docker exec ort-container ort scan -i ./ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
 
           echo "==== ort scan:"
           echo "==== pwd:"
           ls -l
 
-          echo "==== ort results:"
+          echo "==== ort scan results:"
           ls -l ort-results
           ls -l ./ort-results
 
@@ -109,13 +118,15 @@ jobs:
           echo "$vulnerabilities"
 
           echo "Running ORT advisor for security vulnerabilities..."
-          docker run --rm -v "$PWD:$PWD" \
-            -e ORT_ADVISOR_OSV_ENABLED=true \
-            -e ORT_ADVISOR_GITHUB_ENABLED=true \
-            ghcr.io/oss-review-toolkit/ort:latest advisor \
-            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+          # docker run --rm -v "$PWD:$PWD" \
+          #   -e ORT_ADVISOR_OSV_ENABLED=true \
+          #   -e ORT_ADVISOR_GITHUB_ENABLED=true \
+          #   ghcr.io/oss-review-toolkit/ort:latest advisor \
+          #   -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
 
-          echo "==== ort results:"
+          docker exec ort-container ort advisor -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+
+          echo "==== ort advisor results:"
           ls -l ort-results
           ls -l ./ort-results
 
