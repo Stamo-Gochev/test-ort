@@ -8,12 +8,6 @@
         "node": ">=20.0.0"
     },
     "dependencies": {
-        "jest": "20.0.0"
-    },
-    "peerDependencies": {
-        "semantic-release": "6.0.0"
-    },
-    "devDependencies": {
-        "validate-commit-msg": "1.1.1"
+        "semver": "1.0.0"
     }
 }
