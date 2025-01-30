@@ -65,7 +65,8 @@ jobs:
 
             if (vulnerabilities && vulnerabilities.length) {
               let commentBody = `## Results for scanned packages: \n`;
-              commentBody += `\n**Changes in dependencies:** ${newDeps ? 'Yes' : 'No'} + \n
+              commentBody += `\n### Changes in dependencies: ${newDeps ? 'Yes' : 'No'} \n`;
+              commentBody += `
                 <details><summary>npm audit results</summary>
                 <p>
               `;
