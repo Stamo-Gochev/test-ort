@@ -77,10 +77,6 @@ jobs:
           packages=$(echo "$dependencies")
           # echo "$packages" >> $GITHUB_ENV
 
-
-      - name: Run ORT scanner for vulnerabilities
-        id: ort-scan
-        run: |
           echo "Running ORT scanner for security vulnerabilities..."
           docker run --rm -v "$PWD:$PWD" \
            -e ORT_CONFIG='{
@@ -100,10 +96,7 @@ jobs:
           echo "==== ort results:"
           ls -l ort-results
           ls -l ./ort-results
-
-      - name: Extract Vulnerabilities from ORT Scanner
-        id: extract-vulnerabilities
-        run: |
+|
           vulnerabilities=$(jq -c '[.scanner.results.scanResults[].summary.vulnerabilities[]? | {id, severity, title}]' < ort-results/scanner-result.json)
 
           vulnerabilities="${vulnerabilities:-[]}"  # Ensure valid JSON string
