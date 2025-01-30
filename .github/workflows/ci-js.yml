@@ -49,10 +49,6 @@ jobs:
         id: ort-analyze
         run: |
           echo "Running ORT analyze..."
-          # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
-          # json_output=$(docker run ghcr.io/oss-review-toolkit/ort:latest -v $PWD/:/$PWD analyze -i . -o . --output-formats JSON)
-          # json_output=$(docker run --rm -v "$PWD:/workspace" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /workspace --output-formats JSON)
-          # json_output=$(docker run --rm -v "$PWD:/workspace" -v "$PWD/ort-output:/ort-output" -w /workspace ghcr.io/oss-review-toolkit/ort:latest analyze -i . -o /ort-output --output-formats JSON)
 
           json_output=$(docker run --rm -v "$PWD:$PWD" -w "$PWD" ghcr.io/oss-review-toolkit/ort:latest analyze -i $PWD -o $PWD/ort-output --output-formats JSON)
 
@@ -68,7 +64,6 @@ jobs:
           json_output=$(cat ./ort-output/analyzer-result.json)
 
           echo "======== json output"
-          # echo "$json_output"
 
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.projects[].scopes[].dependencies[].id' | tr '\n' ',')
           # dependencies=$(cat ort-output/analyzer/result.json | jq -r '.analyzer.result.projects[].scopes[].dependencies[] | select(.vulnerabilities != null) | .id')
@@ -77,11 +72,23 @@ jobs:
           # dependencies=$(echo "$json_output" | jq -r '.analyzer.result.packages[] | select(.vulnerabilities != null and (.vulnerabilities | length > 0)) | .id'
 
           dependencies=$(echo "$json_output")
+          echo "======== dependencies"
           echo "$dependencies"
+          packages=$(echo "$dependencies")
+          echo "$packages" >> $GITHUB_ENV
 
-          echo "$dependencies"
-          echo "packages=${dependencies}" >> $GITHUB_ENV
-          echo "Detected packages: $dependencies"
+      - name: Run ORT advisor for vulnerability check
+        id: ort-advisor
+        run: |
+          echo "Running ORT advisor for security vulnerabilities..."
+          vulnerabilities=$(docker run --rm -v "$PWD:$PWD" ghcr.io/oss-review-toolkit/ort:latest advisor \
+            -i ort-output/analyzer-result.json --output-formats JSON 2>/dev/null \
+            | jq -r '.advisor.results.projects[].vulnerabilities[]?.id' | tr '\n' ',')
+
+          echo "========= vulnerabilities"
+          echo "$vulnerabilities"
+
+          echo "$vulnerabilities" >> $GITHUB_ENV
 
       # - name: Run ORT analyze
       #   id: ort-analyze
@@ -118,6 +125,8 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            const vulnerabilities = `${{ $GITHUB_ENV.vulnerabilities }}`;
+            console.log(vulnerabilities);
             const ortResult = `${{ env.ORT_RESULT }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const packages = `${{ steps.ort_analysis.outputs.packages }}`.split('\n').map(p => p.replace(/_/g, ' '));
             const newDeps = `${{ steps.check_new_deps.outputs.new_deps }}` === 'true';
