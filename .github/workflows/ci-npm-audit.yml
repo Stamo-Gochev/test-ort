@@ -68,11 +68,11 @@ jobs:
               commentBody += `\n**Changes in dependencies:** ${newDeps ? 'Yes' : 'No'} + \n
                 <details><summary>npm audit results</summary>
                 <p>
-
-                ```json
-                  ${vulnerabilities}
-                ```
-
+              `;
+              commentBody += "```json";
+              commentBody += `${vulnerabilities}`;
+              commentBody += "```json";
+              commentBody += `
                 </p>
                 </details>
               `;
