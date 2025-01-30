@@ -77,6 +77,10 @@ jobs:
           packages=$(echo "$dependencies")
           # echo "$packages" >> $GITHUB_ENV
 
+          echo "======== print ort result.json file"
+          cat ./ort-results/analyzer-result.json
+          cat ort-results/analyzer-result.json
+
           echo "Running ORT scanner for security vulnerabilities..."
           docker run --rm -v "$PWD:$PWD" \
            -e ORT_CONFIG='{
@@ -87,7 +91,7 @@ jobs:
               }
             }' \
             ghcr.io/oss-review-toolkit/ort:latest scan \
-            -i ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
+            -i ./ort-results/analyzer-result.json --output-formats JSON --output-dir ort-results
 
           echo "==== ort scan:"
           echo "==== pwd:"
