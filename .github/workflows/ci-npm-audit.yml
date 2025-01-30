@@ -65,17 +65,11 @@ jobs:
 
             if (vulnerabilities && vulnerabilities.length) {
               let commentBody = `## Results for scanned packages: \n`;
-              commentBody += `
-                <details><summary>npm audit results</summary>
-                <p>
-              `;
+              commentBody += `\n<details><summary>npm audit results</summary>\n<p>`;
               commentBody += "```json";
               commentBody += `${vulnerabilities}`;
               commentBody += "```json";
-              commentBody += `
-                </p>
-                </details>
-              `;
+              commentBody += `\n</p>\n</details> `;
 
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
